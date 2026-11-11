@@ -39,7 +39,7 @@ describe("TUI dependency graph section", () => {
 	});
 
 	it("replaces the raw dependency ID list and sits directly above the description", () => {
-		const body = detailBody(selected, true);
+		const body = detailBody({ ...selected, description: "Selected body" }, true);
 
 		// Same relative position as the canonical CLI plain output.
 		expect(body).not.toContain("Dependencies:");

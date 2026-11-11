@@ -54,13 +54,11 @@ function collectWidgets(root: TestWidget): TestWidget[] {
 }
 
 /**
- * The popup body is the only widget rendering a task's checklists, so its presence says the
+ * The popup body is the only widget rendering a task's created date, so its presence says the
  * popup is open and its identity says whether the board rebuilt it.
  */
 function findPopupBody(screen: ScreenInterface): TestWidget | undefined {
-	return collectWidgets(screen as unknown as TestWidget).find((widget) =>
-		widget.getContent?.().includes("Acceptance Criteria"),
-	);
+	return collectWidgets(screen as unknown as TestWidget).find((widget) => widget.getContent?.().includes("Created:"));
 }
 
 function screenText(screen: ScreenInterface): string {
