@@ -38,7 +38,7 @@ import { applyTaskFilters, createTaskSearchIndex } from "../utils/task-search.ts
 import { sectionTasks, sortTasks } from "../utils/task-sorting.ts";
 import { attachSubtaskSummaries } from "../utils/task-subtasks.ts";
 import { getTaskTypeValues, resolveTaskTypeValues } from "../utils/task-type-config.ts";
-import { formatChecklistItem } from "./checklist.ts";
+import { type ChecklistItem, formatChecklistItem } from "./checklist.ts";
 import { transformCodePaths } from "./code-path.ts";
 import { openConfirmPopup } from "./components/confirm-popup.ts";
 import {
@@ -1697,13 +1697,12 @@ export function generateDetailContent(
 		bodyContent.push("");
 	}
 
-	bodyContent.push(formatHeading("Description", 2));
 	const descriptionText = task.description?.trim();
-	const descriptionContent = descriptionText
-		? transformCodePaths(descriptionText)
-		: "{gray-fg}No description provided{/}";
-	bodyContent.push(descriptionContent);
-	bodyContent.push("");
+	if (descriptionText) {
+		bodyContent.push(formatHeading("Description", 2));
+		bodyContent.push(transformCodePaths(descriptionText));
+		bodyContent.push("");
+	}
 
 	if (task.references?.length) {
 		bodyContent.push(formatHeading("References", 2));
@@ -1730,49 +1729,8 @@ export function generateDetailContent(
 		bodyContent.push("");
 	}
 
-	bodyContent.push(formatHeading("Acceptance Criteria", 2));
-	const checklistItems = buildAcceptanceCriteriaItems(task);
-	if (checklistItems.length > 0) {
-		const formattedCriteria = checklistItems.map((item) =>
-			formatChecklistItem(
-				{
-					text: transformCodePaths(item.text),
-					checked: item.checked,
-				},
-				{
-					padding: " ",
-					checkedSymbol: "{green-fg}✓{/}",
-					uncheckedSymbol: "{gray-fg}○{/}",
-				},
-			),
-		);
-		bodyContent.push(formattedCriteria.join("\n"));
-	} else {
-		bodyContent.push("{gray-fg}No acceptance criteria defined{/}");
-	}
-	bodyContent.push("");
-
-	bodyContent.push(formatHeading("Definition of Done", 2));
-	const definitionItems = buildDefinitionOfDoneItems(task);
-	if (definitionItems.length > 0) {
-		const formattedDefinition = definitionItems.map((item) =>
-			formatChecklistItem(
-				{
-					text: transformCodePaths(item.text),
-					checked: item.checked,
-				},
-				{
-					padding: " ",
-					checkedSymbol: "{green-fg}✓{/}",
-					uncheckedSymbol: "{gray-fg}○{/}",
-				},
-			),
-		);
-		bodyContent.push(formattedDefinition.join("\n"));
-	} else {
-		bodyContent.push("{gray-fg}No Definition of Done items defined{/}");
-	}
-	bodyContent.push("");
+	bodyContent.push(...formatChecklistSection("Acceptance Criteria", buildAcceptanceCriteriaItems(task)));
+	bodyContent.push(...formatChecklistSection("Definition of Done", buildDefinitionOfDoneItems(task)));
 
 	const implementationPlan = task.implementationPlan?.trim();
 	if (implementationPlan) {
@@ -1809,6 +1767,24 @@ export function generateDetailContent(
 	}
 
 	return { headerContent, bodyContent };
+}
+
+function formatChecklistSection(heading: string, items: ChecklistItem[]): string[] {
+	if (items.length === 0) return [];
+	const formattedItems = items.map((item) =>
+		formatChecklistItem(
+			{
+				text: transformCodePaths(item.text),
+				checked: item.checked,
+			},
+			{
+				padding: " ",
+				checkedSymbol: "{green-fg}✓{/}",
+				uncheckedSymbol: "{gray-fg}○{/}",
+			},
+		),
+	);
+	return [formatHeading(heading, 2), formattedItems.join("\n"), ""];
 }
 
 export async function createTaskPopup(
